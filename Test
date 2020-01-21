@@ -1,0 +1,80 @@
+class Person():
+    userId = 0
+    answers = {}
+    timestamp = ''
+    age = 0
+    gender = 'F'
+    address = ''
+
+    def __init__(self, row):
+        global questions
+        #self.answers = {}
+        self.userId = setId()
+        self.timestamp = row[0]
+        self.age = row[1]
+        self.gender = row[2]
+        self.address = row[3]
+        for i, a in enumerate(row[4:-1]):
+            if a.find(';') > -1:
+                self.answers[questions[i]] = a.split(';')
+            else:
+                self.answers[questions[i]] = a
+            
+
+def setId():
+    global users
+    currentIds = list(users.keys())
+    currentIds.sort()
+    if len(currentIds) == 0:
+        return 1
+    else:
+        lastId = currentIds.pop()
+        newId = int(lastId) + 1
+        return newId
+
+
+root = 'D:/Python Projects/Music Data/Raw Data.csv'
+f = open(root)
+csv = f.read()
+f.close()
+headers = csv.replace('ï»¿', '').split('\n')[0].split(',')
+demographics = headers[:4]
+questions = headers[4:-1]
+questionDict = dict.fromkeys(questions)
+for q in questionDict:
+    questionDict[q] = {}
+demoDict = dict.fromkeys(demographics)
+for d in demoDict:
+    demoDict[d] = {}
+userRows = [row.split(',') for row in csv.strip().split('\n')[1:]]
+users= {}
+
+for row in userRows:
+    person = Person(row)
+    users[person.userId] = person
+
+    for i, col in enumerate(row[:4]):
+        if col not in demoDict[demographics[i]]:
+            demoDict[demographics[i]][col] = []
+        demoDict[demographics[i]][col] += [person]
+        
+    for i, col in enumerate(row[4:-1]):
+        if col not in questionDict[questions[i]]:
+            questionDict[questions[i]][col] = []
+        questionDict[questions[i]][col] += [person]
+
+for idNum in users:
+    user = users[idNum]
+    #print(idNum, user.timestamp, user.gender,user.age, user.address)
+    #for k in user.answers.keys():
+    #    print(k, user.answers[k])
+
+#{"Gender":{"F":[users], "M":[users], "Non-binary":[users]}}
+for demo in demoDict:
+    print('\n***\n' + demo)
+    print('\n'.join([str(k) + ': ' + str(len(demoDict[demo][k])) for k in list(demoDict[demo].keys())]))
+    
+for q in questionDict:
+    print('\n***\n' + q)
+    print('\n'.join([str(k) + ': ' + str(len(questionDict[q][k])) for k in list(questionDict[q].keys())]))
+    
